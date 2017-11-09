@@ -4,7 +4,7 @@ import re
 from sanic.response import html
 
 
-GRAPHIQL_VERSION = '0.7.1'
+GRAPHIQL_VERSION = '0.11.10'
 
 TEMPLATE = '''<!--
 The request to this GraphQL server provided the header "Accept: text/html"
@@ -25,11 +25,11 @@ add "&raw" to the end of the URL within a browser.
     }
   </style>
   <meta name="referrer" content="no-referrer">
-  <link href="//cdn.jsdelivr.net/graphiql/{{graphiql_version}}/graphiql.css" rel="stylesheet" />
-  <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
+  <link href="//unpkg.com/graphiql@{{ graphiql_version }}/graphiql.css" rel="stylesheet" />
+  <script src="//cdn.jsdelivr.net/fetch/2.0.1/fetch.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
-  <script src="//cdn.jsdelivr.net/graphiql/{{graphiql_version}}/graphiql.min.js"></script>
+  <script src="//unpkg.com/graphiql@{{ graphiql_version }}/graphiql.min.js"></script>
 </head>
 <body>
   <script>
