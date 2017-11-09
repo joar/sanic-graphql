@@ -1,3 +1,4 @@
+import logging
 from collections import Mapping
 from functools import partial
 from cgi import parse_header
@@ -14,6 +15,8 @@ from graphql_server import (HttpQueryError, default_format_error,
                             load_json_body, run_http_query)
 
 from .render_graphiql import render_graphiql
+
+_log = logging.getLogger(__name__)
 
 
 class GraphQLView(HTTPMethodView):
@@ -126,6 +129,7 @@ class GraphQLView(HTTPMethodView):
                 return self.process_preflight(request)
 
         except HttpQueryError as e:
+            _log.exception(GraphQLView.dispatch_request.__name__)
             return HTTPResponse(
                 self.encode({
                     'errors': [default_format_error(e)]
