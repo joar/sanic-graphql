@@ -1,10 +1,9 @@
 import logging
-from collections import Mapping
+from collections import MutableMapping
 from functools import partial
 from cgi import parse_header
-from typing import Optional, Any, Union, TypeVar
+from typing import TypeVar
 
-from graphql import GraphQLError
 from graphql.error import GraphQLLocatedError
 from promise import Promise
 
@@ -67,8 +66,8 @@ class GraphQLView(HTTPMethodView):
             isinstance(self.context, dict)
             else {}
         )
-        if isinstance(context, dict) and 'request' not in context:
-            context.update({'request': request})
+        if isinstance(context, MutableMapping) and 'request' not in context:
+            context['request'] = request
         return context
 
     def get_middleware(self, request):
