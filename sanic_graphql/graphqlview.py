@@ -2,9 +2,13 @@ import logging
 from collections import Mapping
 from functools import partial
 from cgi import parse_header
+from typing import Optional, Any, Union, TypeVar
 
-
+from graphql import GraphQLError
+from graphql.error import GraphQLLocatedError
 from promise import Promise
+
+from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.views import HTTPMethodView
 
@@ -17,6 +21,12 @@ from graphql_server import (HttpQueryError, default_format_error,
 from .render_graphiql import render_graphiql
 
 _log = logging.getLogger(__name__)
+
+T_error = TypeVar(
+    'T_error',
+    GraphQLLocatedError,
+    HttpQueryError,
+)
 
 
 class GraphQLView(HTTPMethodView):
@@ -54,10 +64,10 @@ class GraphQLView(HTTPMethodView):
         context = (
             self.context.copy()
             if self.context and
-            isinstance(self.context, Mapping)
+            isinstance(self.context, dict)
             else {}
         )
-        if isinstance(context, Mapping) and 'request' not in context:
+        if isinstance(context, dict) and 'request' not in context:
             context.update({'request': request})
         return context
 
@@ -76,7 +86,6 @@ class GraphQLView(HTTPMethodView):
             graphiql_template=self.graphiql_template,
         )
 
-    format_error = staticmethod(default_format_error)
     encode = staticmethod(json_encode)
 
     async def dispatch_request(self, request, *args, **kwargs):
@@ -109,7 +118,7 @@ class GraphQLView(HTTPMethodView):
                 result, status_code = encode_execution_results(
                     awaited_execution_results,
                     is_batch=isinstance(data, list),
-                    format_error=self.format_error,
+                    format_error=partial(self._format_error, request),
                     encode=partial(self.encode, pretty=pretty)
                 )
 
@@ -130,14 +139,27 @@ class GraphQLView(HTTPMethodView):
 
         except HttpQueryError as e:
             _log.exception(GraphQLView.dispatch_request.__name__)
+
             return HTTPResponse(
                 self.encode({
-                    'errors': [default_format_error(e)]
+                    'errors': [self._format_error(request, e)]
                 }),
                 status=e.status_code,
                 headers=e.headers,
                 content_type='application/json'
             )
+
+    def _format_error(self, request: Request, error: T_error):
+        formatted = self.format_error(request, error)
+
+        if formatted is not None:
+            return formatted
+        return default_format_error(error)
+
+    def format_error(self, request: Request, error: T_error):
+        """
+        Should return a JSON serializable object or None.
+        """
 
     # noinspection PyBroadException
     def parse_body(self, request):
