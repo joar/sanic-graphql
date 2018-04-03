@@ -2,6 +2,8 @@ from setuptools import setup, find_packages
 
 required_packages = [
     'graphql-core>=1.0',
+    # Since graphql-server-core is not released properly, install it however you
+    # see fit.
     'sanic>=0.5.1',
 ]
 
